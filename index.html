@@ -11,88 +11,130 @@
 *{margin:0;padding:0;box-sizing:border-box}
 
 html,body{
-width:100%;
 height:100%;
+width:100%;
 overflow:hidden;
 background:black;
-font-family:Cinzel,serif;
+font-family:'Cinzel',serif;
 }
 
-/* ==== BACKGROUND ==== */
+/* ===== FADE INTRO ===== */
+
+body{
+opacity:0;
+animation:fadein 2s ease forwards;
+}
+
+@keyframes fadein{
+to{opacity:1}
+}
+
+/* ===== BACKGROUND ===== */
 
 .bg{
 position:fixed;
 inset:0;
-background:url("poster.jpg") center center / contain no-repeat;
+background:url("poster.jpg") center/contain no-repeat;
 background-color:black;
-animation:slowzoom 30s linear infinite alternate;
+animation:slowZoom 40s linear infinite alternate;
 }
 
-@keyframes slowzoom{
+@keyframes slowZoom{
 from{transform:scale(1)}
 to{transform:scale(1.08)}
 }
 
-/* ==== OVERLAYS ==== */
+/* ===== MOON GLOW ===== */
 
-.vignette{
+.moonGlow{
 position:fixed;
 inset:0;
-background:radial-gradient(circle,transparent 45%,rgba(0,0,0,.8));
+background:radial-gradient(circle at 15% 20%,rgba(255,220,120,.4),transparent 40%);
+animation:pulse 6s ease-in-out infinite alternate;
+mix-blend-mode:screen;
 }
 
-.filmgrain{
+@keyframes pulse{
+from{opacity:.5}
+to{opacity:1}
+}
+
+/* ===== LIGHT RAYS ===== */
+
+.rays{
+position:fixed;
+inset:-50%;
+background:conic-gradient(from 90deg,rgba(255,255,255,.06),transparent,rgba(255,255,255,.06));
+animation:spin 90s linear infinite;
+mix-blend-mode:screen;
+}
+
+@keyframes spin{
+to{transform:rotate(360deg)}
+}
+
+/* ===== FILM GRAIN ===== */
+
+.grain{
 position:fixed;
 inset:0;
 background:url("https://i.imgur.com/8pQe7zD.png");
 opacity:.12;
 mix-blend-mode:overlay;
-animation:grain 1s steps(8) infinite;
+animation:grain 1s steps(6) infinite;
 }
 
 @keyframes grain{
-0%{transform:translate(0,0)}
-100%{transform:translate(-5%,5%)}
+to{transform:translate(-5%,5%)}
 }
 
-/* ==== DUST ==== */
+/* ===== DUST PARTICLES ===== */
 
 .dust span{
 position:fixed;
 width:2px;
 height:2px;
 background:white;
-opacity:.5;
-animation:floatdust linear infinite;
+opacity:.4;
+animation:dustFloat linear infinite;
 }
 
-@keyframes floatdust{
+@keyframes dustFloat{
 from{transform:translateY(100vh)}
 to{transform:translateY(-20vh)}
 }
 
-/* ==== CENTER ==== */
+/* ===== CENTER CONTENT ===== */
 
 .center{
 position:fixed;
 inset:0;
 display:flex;
+flex-direction:column;
 align-items:center;
 justify-content:center;
 z-index:5;
+}
+
+.logoWrapper{
+position:relative;
 }
 
 .logo{
 width:240px;
 max-width:70vw;
 filter:drop-shadow(0 0 50px gold);
-position:relative;
-overflow:hidden;
+animation:float 6s ease-in-out infinite;
+}
+
+@keyframes float{
+0%,100%{transform:translateY(0)}
+50%{transform:translateY(-20px)}
 }
 
 /* GOLD SHIMMER */
 
-.logo::after{
+.logoWrapper::after{
 content:"";
 position:absolute;
 top:0;
@@ -100,25 +142,44 @@ left:-100%;
 width:100%;
 height:100%;
 background:linear-gradient(120deg,transparent,rgba(255,255,255,.7),transparent);
-animation:shimmer 4s infinite;
+animation:shimmer 5s infinite;
 }
 
 @keyframes shimmer{
-from{left:-100%}
 to{left:100%}
 }
 
-/* ==== BUTTON ==== */
+/* ===== CALLIGRAPHY SVG ===== */
+
+.calligraphy{
+margin-top:30px;
+width:320px;
+max-width:80vw;
+stroke:#1fffd6;
+stroke-width:2;
+fill:none;
+stroke-dasharray:1200;
+stroke-dashoffset:1200;
+animation:draw 5s ease forwards 1s;
+filter:drop-shadow(0 0 20px #00ffd5);
+}
+
+@keyframes draw{
+to{stroke-dashoffset:0}
+}
+
+/* ===== START BUTTON ===== */
 
 .start{
 position:fixed;
-bottom:20px;
+bottom:30px;
 padding:12px 20px;
 background:rgba(0,0,0,.6);
 color:white;
 border:1px solid gold;
 border-radius:10px;
 z-index:10;
+backdrop-filter:blur(10px);
 }
 
 </style>
@@ -127,16 +188,25 @@ z-index:10;
 <body>
 
 <div class="bg"></div>
-<div class="filmgrain"></div>
-<div class="vignette"></div>
+<div class="moonGlow"></div>
+<div class="rays"></div>
+<div class="grain"></div>
+<div class="dust" id="dust"></div>
 
 <div class="center">
+<div class="logoWrapper">
 <img src="logo.jpg" class="logo">
 </div>
 
-<button class="start" id="startBtn">Tap To Begin</button>
+<svg class="calligraphy" viewBox="0 0 500 150">
+<text x="50%" y="60%" text-anchor="middle" font-size="60" font-family="Cinzel">
+Ramadan Mubarak
+</text>
+</svg>
 
-<div class="dust" id="dust"></div>
+</div>
+
+<button class="start" id="startBtn">Tap To Experience</button>
 
 <audio id="music" src="music.mp3" loop></audio>
 <audio id="whoosh" src="whoosh.mp3"></audio>
@@ -144,27 +214,23 @@ z-index:10;
 <script>
 
 /* DUST */
-
 const dust=document.getElementById("dust");
 for(let i=0;i<80;i++){
-let s=document.createElement("span");
-s.style.left=Math.random()*100+"%";
-s.style.animationDuration=10+Math.random()*20+"s";
-dust.appendChild(s);
+let p=document.createElement("span");
+p.style.left=Math.random()*100+"%";
+p.style.animationDuration=10+Math.random()*20+"s";
+dust.appendChild(p);
 }
 
-/* PARALLAX */
-
+/* PARALLAX DRIFT */
 const bg=document.querySelector(".bg");
-
 document.addEventListener("mousemove",e=>{
-let x=(e.clientX/window.innerWidth-.5)*10;
-let y=(e.clientY/window.innerHeight-.5)*10;
+let x=(e.clientX/window.innerWidth-.5)*12;
+let y=(e.clientY/window.innerHeight-.5)*12;
 bg.style.transform=`translate(${x}px,${y}px) scale(1.05)`;
 });
 
-/* START */
-
+/* AUDIO START */
 const music=document.getElementById("music");
 const whoosh=document.getElementById("whoosh");
 
