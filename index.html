@@ -5,49 +5,66 @@
 <title>Ramadan Mubarak | Sea Food Kings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+
 html,body{
 width:100%;
 height:100%;
 overflow:hidden;
-background:#020617;
-font-family:Orbitron,sans-serif;
+background:black;
+font-family:Cinzel,serif;
 }
 
-canvas{
+/* ===== BACKGROUND ===== */
+
+.bg{
+position:fixed;
+inset:0;
+background:url("poster.jpg") center/cover no-repeat;
+transform:scale(1.05);
+animation:slowzoom 30s linear infinite alternate;
+}
+
+@keyframes slowzoom{
+from{transform:scale(1.05)}
+to{transform:scale(1.15)}
+}
+
+/* ===== OVERLAYS ===== */
+
+.vignette{
+position:fixed;
+inset:0;
+background:radial-gradient(circle,transparent 40%,rgba(0,0,0,.8));
+}
+
+.rays{
+position:fixed;
+inset:-50%;
+background:conic-gradient(from 90deg,rgba(255,255,255,.05),transparent,rgba(255,255,255,.05));
+animation:spin 60s linear infinite;
+mix-blend-mode:screen;
+}
+
+@keyframes spin{
+from{transform:rotate(0deg)}
+to{transform:rotate(360deg)}
+}
+
+/* ===== CENTER CONTENT ===== */
+
+.center{
 position:absolute;
 inset:0;
-z-index:0;
-}
-
-/* ===== SCENE ===== */
-
-.scene{
-position:relative;
-z-index:5;
-width:100%;
-height:100%;
 display:flex;
-flex-direction:column;
 align-items:center;
 justify-content:center;
-perspective:1000px;
+flex-direction:column;
+z-index:3;
 }
-
-.card{
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(20px);
-padding:40px;
-border-radius:25px;
-box-shadow:0 0 80px rgba(0,255,200,.4);
-transform-style:preserve-3d;
-transition:.1s;
-}
-
-/* ===== LOGO ===== */
 
 .logo{
 width:260px;
@@ -57,86 +74,22 @@ animation:float 6s ease-in-out infinite;
 
 @keyframes float{
 0%,100%{transform:translateY(0)}
-50%{transform:translateY(-30px)}
+50%{transform:translateY(-25px)}
 }
 
-/* ===== CALLIGRAPHY ===== */
+/* ===== MUSIC BUTTON ===== */
 
-.calligraphy{
-font-size:3rem;
-font-family:Cinzel,serif;
-margin-top:30px;
-color:#1fffd6;
-text-shadow:
-0 0 20px #1fffd6,
-0 0 40px #1fffd6,
-0 0 80px #00ffd5;
-}
-
-/* ===== MOON ===== */
-
-.moon{
-position:absolute;
-top:8%;
-left:8%;
-width:220px;
-height:220px;
-border-radius:50%;
-background:radial-gradient(circle,#fff,#ffe29a,#ffb703);
-box-shadow:0 0 200px #ffd166;
-}
-
-/* ===== FIRE FLIES ===== */
-
-.firefly{
-position:absolute;
-width:4px;
-height:4px;
-background:#00ffd5;
-border-radius:50%;
-box-shadow:0 0 10px #00ffd5;
-animation:fly 12s linear infinite;
-}
-
-@keyframes fly{
-from{transform:translateY(0)}
-to{transform:translateY(-120vh)}
-}
-
-/* ===== CONTROLS ===== */
-
-.controls{
-position:absolute;
+.music{
+position:fixed;
 top:20px;
 right:20px;
-display:flex;
-gap:10px;
-}
-
-.btn{
-padding:10px 14px;
 background:rgba(0,0,0,.5);
-border:1px solid #00ffd5;
-color:#00ffd5;
+color:white;
+border:1px solid gold;
+padding:10px 14px;
 border-radius:10px;
 cursor:pointer;
-}
-
-/* ===== SHARE ===== */
-
-.share{
-position:absolute;
-bottom:20px;
-display:flex;
-gap:15px;
-}
-
-.share button{
-background:#00ffd5;
-border:none;
-padding:10px 15px;
-border-radius:8px;
-cursor:pointer;
+z-index:5;
 }
 
 </style>
@@ -144,124 +97,38 @@ cursor:pointer;
 
 <body>
 
-<canvas id="stars"></canvas>
+<div class="bg" id="bg"></div>
+<div class="rays"></div>
+<div class="vignette"></div>
 
-<div class="moon"></div>
+<button class="music" id="musicBtn">🎵</button>
 
-<div class="controls">
-<button class="btn" id="musicBtn">🎵</button>
-</div>
-
-<div class="scene">
-
-<div class="card" id="card">
-
-<img src="logo.png" class="logo">
-
-<div class="calligraphy">Ramadan Mubarak</div>
-
-</div>
-
-</div>
-
-<div class="share">
-<button onclick="share()">Share</button>
+<div class="center">
+<img src="logo.jpg" class="logo">
 </div>
 
 <audio id="music" src="music.mp3" loop></audio>
 
 <script>
 
-/* ===== STARFIELD ===== */
+/* PARALLAX DRIFT */
 
-const canvas=document.getElementById("stars");
-const ctx=canvas.getContext("2d");
-let w,h;
-function resize(){
-w=canvas.width=innerWidth;
-h=canvas.height=innerHeight;
-}
-window.onresize=resize;
-resize();
-
-let stars=[];
-for(let i=0;i<300;i++){
-stars.push({
-x:Math.random()*w,
-y:Math.random()*h,
-r:Math.random()*1.5,
-s:Math.random()*0.4+0.2
-});
-}
-
-function animate(){
-ctx.clearRect(0,0,w,h);
-ctx.fillStyle="white";
-stars.forEach(s=>{
-ctx.beginPath();
-ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-ctx.fill();
-s.y+=s.s;
-if(s.y>h){
-s.y=0;
-s.x=Math.random()*w;
-}
-});
-requestAnimationFrame(animate);
-}
-animate();
-
-/* ===== FIREFLIES ===== */
-
-for(let i=0;i<40;i++){
-let f=document.createElement("div");
-f.className="firefly";
-f.style.left=Math.random()*100+"%";
-f.style.top=Math.random()*100+"%";
-f.style.animationDuration=5+Math.random()*10+"s";
-document.body.appendChild(f);
-}
-
-/* ===== PARALLAX ===== */
-
-const card=document.getElementById("card");
+let bg=document.getElementById("bg");
 
 document.addEventListener("mousemove",e=>{
-let x=(innerWidth/2-e.clientX)/25;
-let y=(innerHeight/2-e.clientY)/25;
-card.style.transform=`rotateY(${x}deg) rotateX(${y}deg)`;
+let x=(e.clientX/window.innerWidth-.5)*20;
+let y=(e.clientY/window.innerHeight-.5)*20;
+bg.style.transform=`translate(${x}px,${y}px) scale(1.1)`;
 });
 
-/* ===== GYRO ===== */
-
-window.addEventListener("deviceorientation",e=>{
-let x=e.gamma/5;
-let y=e.beta/5;
-card.style.transform=`rotateY(${x}deg) rotateX(${y}deg)`;
-});
-
-/* ===== MUSIC ===== */
+/* MUSIC */
 
 const music=document.getElementById("music");
-let playing=false;
+let play=false;
 document.getElementById("musicBtn").onclick=()=>{
-playing=!playing;
-playing?music.play():music.pause();
+play=!play;
+play?music.play():music.pause();
 };
-
-/* ===== SHARE ===== */
-
-function share(){
-if(navigator.share){
-navigator.share({
-title:"Ramadan Mubarak",
-text:"Ramadan Mubarak from Sea Food Kings",
-url:location.href
-});
-}else{
-alert("Copy link & share manually");
-}
-}
 
 </script>
 
